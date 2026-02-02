@@ -15,3 +15,13 @@ AMyProject8GameMode::AMyProject8GameMode()
 	}
 	GameStateClass = AMyGameState::StaticClass();
 }
+
+void AMyProject8GameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	//LogGameState: Error: Mixing AGameState with AGameModeBase is not compatible.
+	// Change AGameModeBase subclass (BP_MyProject8GameMode_C) to derive from AGameMode, or make both derive from Base
+
+	UE_LOG(LogTemp, Warning, TEXT("ASDF"));
+}
