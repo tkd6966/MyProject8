@@ -2,7 +2,7 @@
 
 #include "MyProject8GameMode.h"
 #include "MyProject8Character.h"
-#include "MyProject8/Public/MyGameStateBase.h"
+#include "MyProject8/Public/MyGameState.h"
 #include "UObject/ConstructorHelpers.h"
 
 AMyProject8GameMode::AMyProject8GameMode()
@@ -13,5 +13,5 @@ AMyProject8GameMode::AMyProject8GameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
-	GameStateClass = AMyGameStateBase::StaticClass();
+	GameStateClass = AMyGameState::StaticClass();
 }
