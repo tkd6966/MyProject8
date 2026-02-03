@@ -2,6 +2,11 @@
 
 #include "MyProject8Character.h"
 #include "Engine/LocalPlayer.h"
+#include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/TextBlock.h"
+#include "MyGameState.h"
+#include "MyGameInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -55,6 +60,7 @@ AMyProject8Character::AMyProject8Character()
 
 	MaxHealth = 100.0f;
 	Health = MaxHealth;
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -115,6 +121,25 @@ float AMyProject8Character::TakeDamage(float DamageAmount, FDamageEvent const& D
 	return ActualDamage;
 }
 
+void AMyProject8Character::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (IsLocallyControlled()) 
+	{
+		FString CurrentMapName = GetWorld()->GetMapName();
+
+		if (CurrentMapName.Contains("MenuLevel"))
+		{
+			ShowMainMenu(false);
+		}
+		else
+		{
+			ShowGameHUD();
+		}
+	}
+}
+
 int32 AMyProject8Character::GetHealth() const
 {
 	return FMath::FloorToInt(Health);
@@ -124,6 +149,104 @@ void AMyProject8Character::AddHealth(float Amount)
 {
 	Health = FMath::Clamp(Health + Amount, 0.0f, MaxHealth);
 	UE_LOG(LogTemp, Log, TEXT("Health increased to: %f"), Health);
+}
+
+UUserWidget* AMyProject8Character::GetHUDWidget() const
+{
+	return HUDWidgetInstance;
+}
+
+void AMyProject8Character::ShowGameHUD()
+{
+	if (HUDWidgetInstance)
+	{
+		HUDWidgetInstance->RemoveFromParent();
+		HUDWidgetInstance = nullptr;
+	}
+
+	if (MainMenuWidgetInstance)
+	{
+		MainMenuWidgetInstance->RemoveFromParent();
+		MainMenuWidgetInstance = nullptr;
+	}
+
+	if (HUDWidgetClass)
+	{
+		HUDWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
+		if (HUDWidgetInstance)
+		{
+			HUDWidgetInstance->AddToViewport();
+
+			APlayerController* PC = Cast<APlayerController>(GetController());
+			if (PC)
+			{
+				PC->bShowMouseCursor = false;
+				PC->SetInputMode(FInputModeGameOnly());
+			}
+
+			AMyGameState* MyGameState = GetWorld() ? GetWorld()->GetGameState<AMyGameState>() : nullptr;
+			if (MyGameState)
+			{
+				MyGameState->UpdateHUD();
+			}
+		}
+	}
+}
+
+void AMyProject8Character::ShowMainMenu(bool bIsRestart)
+{
+	if (HUDWidgetInstance)
+	{
+		HUDWidgetInstance->RemoveFromParent();
+		HUDWidgetInstance = nullptr;
+	}
+
+	if (MainMenuWidgetInstance)
+	{
+		MainMenuWidgetInstance->RemoveFromParent();
+		MainMenuWidgetInstance = nullptr;
+	}
+
+	if (MainMenuWidgetClass)
+	{
+		MainMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), MainMenuWidgetClass);
+		if (MainMenuWidgetInstance)
+		{
+			MainMenuWidgetInstance->AddToViewport();
+
+			APlayerController* PC = Cast<APlayerController>(GetController());
+			if (PC)
+			{
+				PC->bShowMouseCursor = true;
+				PC->SetInputMode(FInputModeUIOnly());
+			}
+
+			if (UTextBlock* ButtonText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("StartText"))))
+			{
+				if (bIsRestart)
+				{
+					ButtonText->SetText(FText::FromString(TEXT("Restart")));
+				}
+				else
+				{
+					ButtonText->SetText(FText::FromString(TEXT("Start")));
+				}
+			}
+		}
+	}
+}
+
+void AMyProject8Character::StartGame()
+{
+	UE_LOG(LogTemp, Warning, TEXT("StartGame Function Called!"));
+
+	if (UMyGameInstance* MyGameInstance = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(this)))
+	{
+		MyGameInstance->CurrentLevelIndex = 0;
+		MyGameInstance->TotalScore = 0;
+	}
+
+	UGameplayStatics::OpenLevel(GetWorld(), FName("BasicLevel"));
 }
 
 void AMyProject8Character::Move(const FInputActionValue& Value)
@@ -161,3 +284,4 @@ void AMyProject8Character::Look(const FInputActionValue& Value)
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
+

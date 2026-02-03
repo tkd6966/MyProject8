@@ -6,6 +6,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "SpawnVolume.h"
 #include "CoinItem.h"
+#include "MyProject8/MyProject8Character.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
 
 AMyGameState::AMyGameState()
 {
@@ -22,6 +25,8 @@ void AMyGameState::BeginPlay()
 	Super::BeginPlay();
 
 	StartLevel();
+
+	GetWorldTimerManager().SetTimer(HUDUpdateTimerHandle, this, &AMyGameState::UpdateHUD, 0.1f, true);
 
 }
 
@@ -44,11 +49,28 @@ void AMyGameState::AddScore(int32 Amount)
 
 void AMyGameState::OnGameOver()
 {
+	UpdateHUD();
 	
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (AMyProject8Character* MyCharacter = Cast<AMyProject8Character>(PC->GetPawn()))
+		{
+			MyCharacter->ShowMainMenu(true);
+		}
+	}
 }
 
 void AMyGameState::StartLevel()
 {
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (AMyProject8Character* MyCharacter = Cast<AMyProject8Character>(PC->GetPawn()))
+		{
+			MyCharacter->ShowGameHUD();
+		}
+	}
+
+
 	if (UGameInstance* GameInstance = GetGameInstance())
 	{
 		UMyGameInstance* MyGameInstance = Cast<UMyGameInstance>(GameInstance);
@@ -80,6 +102,8 @@ void AMyGameState::StartLevel()
 			}
 		}
 	}
+
+	UpdateHUD();
 
 	GetWorldTimerManager().SetTimer(LevelTimerHandle, this, &AMyGameState::OnLevelTimeUp, LevelDuration, false);
 }
@@ -127,5 +151,36 @@ void AMyGameState::EndLevel()
 	else
 	{
 		OnGameOver();
+	}
+}
+
+void AMyGameState::UpdateHUD()
+{
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (AMyProject8Character* MyCharacter = Cast<AMyProject8Character>(PC->GetPawn()))
+		{
+			if (UUserWidget* HUDWidget = MyCharacter->HUDWidgetInstance)
+			{
+				if (UTextBlock* TimeText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Time"))))
+				{
+					float RemainingTime = GetWorldTimerManager().GetTimerRemaining(LevelTimerHandle);
+					TimeText->SetText(FText::FromString(FString::Printf(TEXT("Time: %.1f"), RemainingTime)));
+				}
+
+				if (UTextBlock* ScoreText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Score"))))
+				{
+					if (UMyGameInstance* MyGameInstance = Cast<UMyGameInstance>(GetGameInstance()))
+					{
+						ScoreText->SetText(FText::FromString(FString::Printf(TEXT("Score: %d"), MyGameInstance->TotalScore)));
+					}
+				}
+
+				if (UTextBlock* LevelIndexText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Level"))))
+				{
+					LevelIndexText->SetText(FText::FromString(FString::Printf(TEXT("Level: %d"), CurrentLevelIndex + 1)));
+				}
+			}
+		}
 	}
 }

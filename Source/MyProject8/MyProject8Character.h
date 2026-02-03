@@ -12,6 +12,7 @@ class UCameraComponent;
 class UInputMappingContext;	
 class UInputAction;
 struct FInputActionValue;
+class UUserWidget;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -71,6 +72,7 @@ protected:
 	virtual void OnDeath();
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	virtual void BeginPlay() override;
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -81,7 +83,26 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Health")
 	int32 GetHealth() const;
 	UFUNCTION(BlueprintCallable, Category = "Health")
-	void AddHealth(float Amount);
+	void AddHealth(float Amount);	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+	TSubclassOf<UUserWidget> HUDWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "HUD")
+	UUserWidget* HUDWidgetInstance = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Menu")
+	TSubclassOf<UUserWidget> MainMenuWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Menu")
+	UUserWidget* MainMenuWidgetInstance = nullptr;
+	
+	UFUNCTION(BlueprintPure, Category = "HUD")
+	UUserWidget* GetHUDWidget() const;
+
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ShowGameHUD();
+	UFUNCTION(BlueprintCallable, Category = "Menu")
+	void ShowMainMenu(bool bIsRestart);
+	UFUNCTION(BlueprintCallable, Category = "Menu")
+	void StartGame();
 };
 
