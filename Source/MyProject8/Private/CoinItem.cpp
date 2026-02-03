@@ -1,6 +1,7 @@
 #include "CoinItem.h"
 #include "Engine/World.h"
 #include "MyGameState.h"
+#include "MyProject8/MyProject8Character.h"
 
 ACoinItem::ACoinItem()
 {
@@ -10,16 +11,16 @@ ACoinItem::ACoinItem()
 
 void ACoinItem::ActivateItem(AActor* Activator)
 {
-	if (Activator && Activator->ActorHasTag	("Player"))
-	{
-		if (UWorld* World = GetWorld())
-		{
-			if (AMyGameState* GameState = World->GetGameState<AMyGameState>())
-			{
-				GameState->AddScore(PointValue);
-				GameState->OnCoinCollected();
-			}
-		}
-		DestroyItem();
-	}
+    if (Activator && Activator->IsA(AMyProject8Character::StaticClass()))
+    {
+        if (UWorld* World = GetWorld())
+        {
+            if (AMyGameState* GameState = World->GetGameState<AMyGameState>())
+            {
+                GameState->AddScore(PointValue);
+                GameState->OnCoinCollected(); 
+            }
+        }
+        DestroyItem();
+    }
 }

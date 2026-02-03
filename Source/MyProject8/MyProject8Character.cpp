@@ -249,6 +249,14 @@ void AMyProject8Character::StartGame()
 	UGameplayStatics::OpenLevel(GetWorld(), FName("BasicLevel"));
 }
 
+void AMyProject8Character::QuitGame()
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		UKismetSystemLibrary::QuitGame(GetWorld(), PC, EQuitPreference::Quit, false);
+	}
+}
+
 void AMyProject8Character::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
